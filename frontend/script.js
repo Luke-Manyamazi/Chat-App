@@ -52,6 +52,9 @@ chatForm.addEventListener("submit", async (e) => {
             document.getElementById("message").value = "";
             loadMessages();
         }
+
+        text.textContent = "";
+        user.textContent = "";
     } catch (error) {
         console.error("Error sending message:", error);
     }
