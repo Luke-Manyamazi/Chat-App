@@ -2,7 +2,7 @@ const chatBox = document.getElementById("chatbox");
 const chatForm = document.getElementById("chat-form");
 const errorEl = document.getElementById("error");
 
-const backendURL = "http://localhost:3001/api/messages";
+const backendURL = "https://luke-chat-app-backend.hosting.codeyourfuture.io";
 
 // Function load messages from backend
 async function loadMessages() {
