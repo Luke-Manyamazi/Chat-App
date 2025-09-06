@@ -4,25 +4,36 @@ const errorEl = document.getElementById("error");
 
 const backendURL = "https://luke-chat-app-backend.hosting.codeyourfuture.io/api/messages";
 
-// Function load messages from backend
-async function loadMessages() {
+let lastId = 0; // track the latest message ID we’ve seen
+
+// --- Long polling function ---
+async function pollMessages() {
     try {
-        const response = await fetch(backendURL);
+        const response = await fetch(`${backendURL}?since=${lastId}`);
         const messages = await response.json();
 
-        chatBox.innerHTML = "";
-        messages.forEach(msg => {
-            const msgDiv = document.createElement("div");
-            msgDiv.className = "message";
-            msgDiv.textContent = `${msg.user}: ${msg.text}`;
-            chatBox.appendChild(msgDiv);
-        })
+        if (messages.length > 0) {
+            messages.forEach(msg => {
+                const msgDiv = document.createElement("div");
+                msgDiv.className = "message";
+                msgDiv.textContent = `${msg.user}: ${msg.text}`;
+                chatBox.appendChild(msgDiv);
+                lastId = msg.id; // update latest message ID
+            });
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // When response finishes (even if empty), immediately poll again
+        pollMessages();
     } catch (error) {
-        console.error("Error loading messages:", error);
+        console.error("Polling error:", error);
+        // Retry after 5 seconds if something goes wrong (like server restart)
+        setTimeout(pollMessages, 5000);
     }
 }
 
-// Handling sending message
+// --- Handling sending message ---
 chatForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -37,9 +48,7 @@ chatForm.addEventListener("submit", async (e) => {
     try {
         const response = await fetch(backendURL, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ user, text })
         });
 
@@ -50,16 +59,11 @@ chatForm.addEventListener("submit", async (e) => {
         } else {
             errorEl.textContent = "";
             document.getElementById("message").value = "";
-            loadMessages();
         }
-
-        text.textContent = "";
-        user.textContent = "";
     } catch (error) {
         console.error("Error sending message:", error);
     }
 });
 
-// Initial load
-loadMessages();
-chatBox.scrollTop = chatBox.scrollHeight;
+// --- Start long-polling when page loads ---
+pollMessages();
