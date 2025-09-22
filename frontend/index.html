@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat App</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Group Chat</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Chat App</h1>
-    <div id="chatbox"></div>
-    <form id="chat-form">
-        <input type="text" id="user" placeholder="Your name" required>
-        <input type="text" id="message" placeholder="Type a message" required>
-        <button id="send">Send</button>
-    </form>
-    <p id="error" style="color: red;"></p>
+  <h1>Group Chat</h1>
+  <div id="online-users">Online: 0</div>
+  <div id="chatbox"></div>
 
-    <script src="script.js"></script>
+  <form id="chat-form">
+    <input type="text" id="message" placeholder="Type a message" required>
+    <button type="submit">Send</button>
+  </form>
+
+   <button id="leave" type="submit">Leave Chat</button>
+
+  <script src="script.js"></script>
 </body>
 </html>
