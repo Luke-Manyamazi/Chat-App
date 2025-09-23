@@ -6,7 +6,7 @@ let currentUser = prompt("Enter your name:");
 let lastId = 0;
 
 // --- Join via polling API (for user list) ---
-fetch("http://luke-quote-app-backend.hosting.codeyourfuture.io/api/join", {
+fetch("https://luke-quote-app-backend.hosting.codeyourfuture.io/api/join", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ user: currentUser }),
