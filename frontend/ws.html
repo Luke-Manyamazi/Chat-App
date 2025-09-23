@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WS - Group Chat</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Group Chat</h1>
+  <div id="online-users">Online: 0</div>
+  <div id="chatbox"></div>
+
+  <form id="chat-form">
+    <input type="text" id="message" placeholder="Type a message" required>
+    <button type="submit">Send</button>
+  </form>
+
+  <button id="leave" type="button">Leave Chat</button>
+
+  <!-- Load the websocket client -->
+  <script src="script-ws.js"></script>
+</body>
+</html>
