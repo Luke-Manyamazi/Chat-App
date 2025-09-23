@@ -1,6 +1,6 @@
 const chatBox = document.getElementById("chatbox");
 const chatForm = document.getElementById("chat-form");
-const backendURL = "http://localhost:3001/api";
+const backendURL = "https://luke-quote-app-backend.hosting.codeyourfuture.io/api";
 
 let lastId = 0;
 let currentUser = "";

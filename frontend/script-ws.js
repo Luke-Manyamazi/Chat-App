@@ -6,14 +6,14 @@ let currentUser = prompt("Enter your name:");
 let lastId = 0;
 
 // --- Join via polling API (for user list) ---
-fetch("http://localhost:3001/api/join", {
+fetch("http://luke-quote-app-backend.hosting.codeyourfuture.io/api/join", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ user: currentUser }),
 });
 
 // --- Connect WebSocket ---
-const ws = new WebSocket("ws://localhost:3001");
+const ws = new WebSocket("wss://luke-quote-app-backend.hosting.codeyourfuture.io");
 
 ws.onopen = () => console.log("Connected via WebSocket");
 
