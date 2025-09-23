@@ -13,7 +13,7 @@ fetch("https://luke-quote-app-backend.hosting.codeyourfuture.io/api/join", {
 });
 
 // --- Connect WebSocket ---
-const ws = new WebSocket("wss://luke-quote-app-backend.hosting.codeyourfuture.io");
+const ws = new WebSocket("wss://luke-quote-app-backend.hosting.codeyourfuture.io/");
 
 ws.onopen = () => console.log("Connected via WebSocket");
 
@@ -84,7 +84,7 @@ function updateMessage(msg) {
 
 // --- Leave ---
 leaveBtn.addEventListener("click", () => {
-  fetch("http://localhost:3001/api/leave", {
+  fetch("https://luke-quote-app-backend.hosting.codeyourfuture.io/api/leave", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ user: currentUser }),
