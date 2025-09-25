@@ -1,32 +1,47 @@
 const chatBox = document.getElementById("chatbox");
 const chatForm = document.getElementById("chat-form");
-const backendURL = "https://luke-quote-app-backend.hosting.codeyourfuture.io/api";
+const leaveBtn = document.getElementById("leave");
+
+// --- Backend URL - now relative since served from same origin ---
+const backendURL = "/api";
 
 let lastId = 0;
 let currentUser = "";
 let onlineUsers = [];
 
 // --- Prompt for username ---
-currentUser = prompt("Enter your name:");
-fetch(`${backendURL}/join`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ user: currentUser }),
-})
-  .then(res => res.json())
-  .then(data => {
-    onlineUsers = data.onlineUsers;
-    updateOnlineUsers(onlineUsers);
-  });
+function initializeUser() {
+  currentUser = prompt("Enter your name:") || "Anonymous";
+  if (!currentUser) currentUser = "Anonymous";
+  
+  fetch(`${backendURL}/join`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user: currentUser }),
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      return res.json();
+    })
+    .then((data) => {
+      onlineUsers = data.onlineUsers || [];
+      updateOnlineUsers(onlineUsers);
+    })
+    .catch(err => {
+      console.error("Join error:", err);
+      alert("Failed to join chat. Please refresh and try again.");
+    });
+}
 
 // --- Poll online users ---
 async function pollOnlineUsers() {
   try {
     const res = await fetch(`${backendURL}/online-users`);
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
     updateOnlineUsers(data.onlineUsers || []);
   } catch (err) {
-    console.error(err);
+    console.error("Online users poll error:", err);
   }
   setTimeout(pollOnlineUsers, 5000);
 }
@@ -35,10 +50,11 @@ async function pollOnlineUsers() {
 async function pollMessages() {
   try {
     const res = await fetch(`${backendURL}/messages?since=${lastId}`);
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const msgs = await res.json();
     msgs.forEach(renderMessage);
   } catch (err) {
-    console.error(err);
+    console.error("Messages poll error:", err);
   }
   setTimeout(pollMessages, 1000);
 }
@@ -47,8 +63,10 @@ async function pollMessages() {
 function renderMessage(msg) {
   let existing = document.getElementById("msg-" + msg.id);
   if (existing) {
-    existing.querySelector(".like-count").textContent = msg.likes;
-    existing.querySelector(".dislike-count").textContent = msg.dislikes;
+    const likeCount = existing.querySelector(".like-count");
+    const dislikeCount = existing.querySelector(".dislike-count");
+    if (likeCount) likeCount.textContent = msg.likes;
+    if (dislikeCount) dislikeCount.textContent = msg.dislikes;
     return;
   }
 
@@ -73,7 +91,7 @@ function renderMessage(msg) {
 
   chatBox.appendChild(msgDiv);
   chatBox.scrollTop = chatBox.scrollHeight;
-  lastId = msg.id;
+  lastId = Math.max(lastId, msg.id);
 }
 
 // --- Update online users ---
@@ -89,29 +107,61 @@ function react(id, type) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id, type }),
-  });
+  }).catch(err => console.error("React error:", err));
 }
 
 // --- Send message ---
-chatForm.addEventListener("submit", async e => {
+chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const text = document.getElementById("message").value.trim();
   if (!text) return;
 
-  await fetch(`${backendURL}/messages`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user: currentUser, text }),
-  });
-
-  document.getElementById("message").value = "";
+  try {
+    const response = await fetch(`${backendURL}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user: currentUser, text }),
+    });
+    
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    
+    document.getElementById("message").value = "";
+  } catch (err) {
+    console.error("Send message error:", err);
+    alert("Failed to send message. Please try again.");
+  }
 });
 
 // --- Leave chat ---
+function leaveChat() {
+  fetch(`${backendURL}/leave`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user: currentUser }),
+  }).then(() => {
+    alert("You left the chat!");
+    window.location.href = "/";
+  }).catch(err => {
+    console.error("Leave error:", err);
+    window.location.href = "/";
+  });
+}
+
+leaveBtn.addEventListener("click", leaveChat);
+
 window.addEventListener("beforeunload", () => {
-  navigator.sendBeacon(`${backendURL}/leave`, JSON.stringify({ user: currentUser }));
+  // Try to send leave request, but don't wait for it
+  fetch(`${backendURL}/leave`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user: currentUser }),
+    keepalive: true
+  }).catch(() => {});
 });
 
 // --- Start polling ---
-pollMessages();
-pollOnlineUsers();
+initializeUser();
+setTimeout(() => {
+  pollMessages();
+  pollOnlineUsers();
+}, 100);
