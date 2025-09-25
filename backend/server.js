@@ -7,19 +7,19 @@ const path = require("path");
 
 const app = express();
 
-// --- CORS Configuration ---
+
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
+   
     if (!origin) return callback(null, true);
     
-    // Allow all origins in development
+    
     if (process.env.NODE_ENV !== 'production') {
       return callback(null, true);
     }
     
-    // In production, restrict to specific origins
-    const allowedOrigins = ['https://yourdomain.com']; // Change this for production
+   
+    const allowedOrigins = ['https://luke-chat-app-backend.hosting.codeyourfuture.io']; 
     if (allowedOrigins.indexOf(origin) !== -1) {
       return callback(null, true);
     } else {
@@ -170,14 +170,14 @@ const wsServer = new WebSocketServer({
 });
 
 wsServer.on("request", (request) => {
-  // Check origin in development - allow all
+  
   if (process.env.NODE_ENV !== 'production') {
     const connection = request.accept(null, request.origin);
     console.log("WebSocket connection accepted from:", request.origin);
     handleWebSocketConnection(connection);
   } else {
-    // In production, check against allowed origins
-    const allowedOrigins = ['https://yourdomain.com']; // Change for production
+   
+    const allowedOrigins = ['https://luke-chat-app-backend.hosting.codeyourfuture.io']; 
     if (allowedOrigins.includes(request.origin)) {
       const connection = request.accept(null, request.origin);
       handleWebSocketConnection(connection);
