@@ -1,174 +1,179 @@
-// --- Deployment URLs ---
-const API_URL = "https://luke-chat-app-backend.hosting.codeyourfuture.io/api";
-const WS_URL  = "wss://luke-chat-app-backend.hosting.codeyourfuture.io";
+// ----------------------------
+// Chat App Frontend Script
+// ----------------------------
 
-// --- DOM Elements ---
-const chatBox = document.getElementById("chatbox");
-const chatForm = document.getElementById("chat-form");
-const leaveBtn = document.getElementById("leave");
-const onlineDiv = document.getElementById("online-users");
+// Backend & WebSocket endpoints
+const API_BASE = "https://luke-chat-app-backend.hosting.codeyourfuture.io";
+const WS_URL = "wss://luke-chat-app-backend.hosting.codeyourfuture.io";
 
-// --- State ---
-let currentUser = "";
-let lastId = 0;
-let onlineUsers = [];
-let ws;
-const chatMode = sessionStorage.getItem("chatMode") || "polling";
+// User state
+let currentUser = null;
+let ws = null;
 
-// --- Helper: API Fetch ---
+// ----------------------------
+// Helper Functions for API Calls
+// ----------------------------
 async function apiFetch(endpoint, options = {}) {
-  const res = await fetch(API_URL + endpoint, {
+  const res = await fetch(`${API_BASE}${endpoint}`, {
     headers: { "Content-Type": "application/json" },
-    ...options
+    ...options,
   });
+
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   return res.json();
 }
-const apiGet = (url) => apiFetch(url, { method: "GET" });
-const apiPost = (url, body) => apiFetch(url, { method: "POST", body: JSON.stringify(body) });
 
-// --- WebSocket Send ---
-function wsSend(data) {
-  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data));
-}
+const apiGet = (path) => apiFetch(`/api${path}`, { method: "GET" });
+const apiPost = (path, body) =>
+  apiFetch(`/api${path}`, { method: "POST", body: JSON.stringify(body) });
 
+// ----------------------------
+// Initialize User
+// ----------------------------
+async function initializeUser() {
+  currentUser = localStorage.getItem("chatUser");
 
-// --- Helper: Render Messages ---
-function createMessageDiv(msg) {
-  const div = document.createElement("div");
-  div.id = "msg-" + msg.id;
-  div.className = "message";
-
-  if (msg.type === "system") {
-    div.classList.add("system");
-    div.innerHTML = `<em>${msg.text}</em>`;
-  } else {
-    div.classList.add(msg.user === currentUser ? "self" : "other");
-    div.innerHTML = `
-      <strong>${msg.user}</strong>: ${msg.text}
-      <span class="timestamp">${new Date(msg.timestamp).toLocaleTimeString()}</span>
-      <div class="reactions">
-        <button onclick="react(${msg.id}, 'like')">👍 <span class="like-count">${msg.likes}</span></button>
-        <button onclick="react(${msg.id}, 'dislike')">👎 <span class="dislike-count">${msg.dislikes}</span></button>
-      </div>`;
+  if (!currentUser) {
+    currentUser = prompt("Enter your chat name:");
+    if (!currentUser) {
+      alert("Name required to join the chat.");
+      return;
+    }
+    localStorage.setItem("chatUser", currentUser);
   }
-  return div;
+
+  try {
+    await apiPost("/join", { user: currentUser });
+    console.log(`✅ Joined chat as ${currentUser}`);
+  } catch (err) {
+    console.error("❌ Join error:", err);
+    alert("Failed to join chat. Please try again later.");
+  }
 }
 
-function renderMessage(msg) {
-  const existing = document.getElementById("msg-" + msg.id);
-  if (existing) return updateMessage(msg);
+// ----------------------------
+// Send Message
+// ----------------------------
+async function sendMessage(text) {
+  if (!text.trim()) return;
 
-  const div = createMessageDiv(msg);
+  const message = {
+    user: currentUser,
+    text,
+  };
+
+  try {
+    await apiPost("/messages", message);
+  } catch (err) {
+    console.error("❌ Failed to send message:", err);
+  }
+}
+
+// ----------------------------
+// Load Messages (Polling Backup)
+// ----------------------------
+async function loadMessages() {
+  try {
+    const msgs = await apiGet("/messages");
+    const chatBox = document.getElementById("chatBox");
+    chatBox.innerHTML = ""; // clear old
+    msgs.forEach(renderMessage);
+  } catch (err) {
+    console.error("❌ Error loading messages:", err);
+  }
+}
+
+// ----------------------------
+// Render Message to UI
+// ----------------------------
+function renderMessage(msg) {
+  const chatBox = document.getElementById("chatBox");
+  const div = document.createElement("div");
+  div.classList.add("message");
+
+  const isMine = msg.user === currentUser;
+  div.classList.add(isMine ? "mine" : "theirs");
+
+  div.innerHTML = `
+    <div class="meta">
+      <strong>${msg.user}</strong>
+      <span>${new Date(msg.time || Date.now()).toLocaleTimeString()}</span>
+    </div>
+    <div class="text">${msg.text}</div>
+  `;
+
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
-  lastId = Math.max(lastId, msg.id);
 }
 
-function updateMessage(msg) {
-  const div = document.getElementById("msg-" + msg.id);
-  if (!div) return;
-  const updateCount = (selector, value) => {
-    const el = div.querySelector(selector);
-    if (el) el.textContent = value;
-  };
-  updateCount(".like-count", msg.likes);
-  updateCount(".dislike-count", msg.dislikes);
-}
-
-function updateOnline(users) {
-  onlineUsers = users;
-  onlineDiv.textContent = `Online: ${users.length}`;
-}
-
-// --- Helper: WebSocket Send ---
-function wsSend(data) {
-  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data));
-}
-
-// --- React Function ---
-function react(id, type) {
-  if (chatMode === "websocket") {
-    wsSend({ type: "react", id, reaction: type });
-  } else {
-    apiPost(`${API_URL}/react`, { id, type }).catch(console.error);
-  }
-}
-
-// --- Initialize User ---
-async function initUser() {
-  currentUser = prompt("Enter your name:") || "Anonymous";
-
-  await apiPost(`${API_URL}/join`, { user: currentUser });
-  updateOnline(onlineUsers);
-
-  if (chatMode === "polling") startPolling();
-  else startWebSocket();
-}
-
-// --- Polling Mode ---
-async function startPolling() {
-  async function pollMessages() {
-    try {
-      const msgs = await apiGet(`/messages?since=${lastId}`);
-      msgs.forEach(renderMessage);
-    } catch (err) { console.error(err); }
-    setTimeout(pollMessages, 1000);
-  }
-
-  async function pollOnlineUsers() {
-    try {
-      const data = await apiGet("/online-users");
-      updateOnline(data.onlineUsers || []);
-    } catch (err) { console.error(err); }
-    setTimeout(pollOnlineUsers, 5000);
-  }
-
-  pollMessages();
-  pollOnlineUsers();
-}
-
-// --- WebSocket Mode ---
+// ----------------------------
+// WebSocket Connection
+// ----------------------------
 function startWebSocket() {
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  ws = new WebSocket(`${protocol}//${window.location.host}`);
+  console.log("🔌 Connecting to WebSocket...");
+  ws = new WebSocket(WS_URL);
 
-  ws.onopen = () => console.log("✅ WS connected");
+  ws.onopen = () => console.log("✅ WebSocket connected");
+  ws.onerror = (err) => console.error("❌ WebSocket error:", err);
+  ws.onclose = () => {
+    console.warn("⚠️ WebSocket disconnected, retrying...");
+    setTimeout(startWebSocket, 3000);
+  };
+
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data);
-    if (data.type === "init") {
-      data.messages.forEach(renderMessage);
-      updateOnline(data.onlineUsers || []);
+    switch (data.type) {
+      case "init":
+        data.messages?.forEach(renderMessage);
+        updateOnline(data.onlineUsers || []);
+        break;
+      case "new-message":
+        renderMessage(data.message);
+        break;
+      case "update":
+        updateMessage(data.message);
+        break;
+      default:
+        console.log("ℹ️ Unknown event type:", data);
     }
-    if (data.type === "new-message") renderMessage(data.message);
-    if (data.type === "update") updateMessage(data.message);
   };
-  ws.onclose = () => setTimeout(startWebSocket, 3000);
-  ws.onerror = console.error;
 }
 
-// --- Send Message ---
-chatForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const text = document.getElementById("message").value.trim();
-  if (!text) return;
+// ----------------------------
+// Online Users Update
+// ----------------------------
+function updateOnline(users) {
+  const list = document.getElementById("onlineUsers");
+  list.innerHTML = users.map((u) => `<li>${u}</li>`).join("");
+}
 
-  if (chatMode === "websocket") {
-    wsSend({ type: "message", user: currentUser, text });
-  } else {
-    await apiPost(`${API_URL}/messages`, { user: currentUser, text });
-  }
-  document.getElementById("message").value = "";
+// ----------------------------
+// Message Update (if edited)
+// ----------------------------
+function updateMessage(msg) {
+  const all = document.querySelectorAll(".message");
+  all.forEach((el) => {
+    if (el.dataset.id === msg.id) {
+      el.querySelector(".text").textContent = msg.text;
+    }
+  });
+}
+
+// ----------------------------
+// Event Listeners
+// ----------------------------
+document.getElementById("messageForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const input = document.getElementById("messageInput");
+  sendMessage(input.value);
+  input.value = "";
 });
 
-// --- Leave Chat ---
-async function leaveChat() {
-  try { await apiPost(`${API_URL}/leave`, { user: currentUser }); } catch {}
-  if (ws) ws.close();
-  window.location.href = "/";
-}
-leaveBtn.addEventListener("click", leaveChat);
-window.addEventListener("beforeunload", leaveChat);
+window.addEventListener("load", async () => {
+  await initializeUser();
+  await loadMessages();
+  startWebSocket();
 
-// --- Start ---
-initUser();
+  // Optional polling every 10 seconds (backup)
+  setInterval(loadMessages, 10000);
+});
