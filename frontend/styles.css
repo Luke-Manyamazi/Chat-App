@@ -1,178 +1,88 @@
+/* --- Basic Page Styles --- */
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: #f0f0f0;
-  color: #333;
-  padding: 20px;
+  font-family: Arial, sans-serif;
   margin: 0;
-  margin-top: 20px;
+  padding: 20px;
+  background: #f9f9f9;
+  color: #333;
 }
 
 h1 {
   text-align: center;
-  color: #2c3e50;
   margin-bottom: 20px;
 }
 
-#online-users {
-  background: #47db2a;
-  padding: 8px 14px;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(96, 236, 64, 0.4);
-  color: #060404;
-  margin: 10px 0;
-  font-weight: bold;
+button {
+  cursor: pointer;
+  padding: 6px 12px;
+  margin: 2px;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
 }
 
+button:hover {
+  background-color: #0056b3;
+}
+
+/* --- Chat Container --- */
 #chatbox {
-  width: 100%;
-  max-width: 700px;
-  height: 60vh;
-  background: #fcfcfc;
-  border-radius: 15px;
-  padding: 12px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 18px;
-  border: 1px solid #ddd;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.message {
-  padding: 10px 14px;
-  border-radius: 15px;
-  max-width: 80%;
-  word-wrap: break-word;
-  box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-}
-
-.message.self { 
-  align-self: flex-end; 
-  background: #00796b; 
-  color: #fff;
-  border-radius: 15px 0 15px 15px; 
-}
-
-.message.other { 
-  align-self: flex-start; 
-  background: #ccc8c8; 
-  color: #0b0808;
-  border-radius: 0 15px 15px 15px; 
-}
-
-.message.system { 
-  align-self: center;
-  text-align: center; 
-  color: #666;
-  font-style: italic;
-  background: transparent;
-  box-shadow: none;
-}
-
-.timestamp { 
-  font-size: 11px; 
-  color: #adacac; 
-  display: block; 
-  margin-top: 5px; 
-}
-
-.reactions { 
-  display: flex; 
-  gap: 6px; 
-  margin-top: 5px; 
-}
-
-.reactions button { 
-  border: none; 
-  background: rgba(0,0,0,0.1); 
-  color: #333;
-  border-radius: 8px; 
-  padding: 2px 8px; 
-  cursor: pointer; 
-  font-size: 12px; 
-  transition: 0.2s;
-}
-
-.reactions button:hover { 
-  background: rgba(0,0,0,0.2); 
-}
-
-#chat-form {
-  display: flex;
-  gap: 10px;
-  max-width: 720px;
-  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  height: 400px;
+  overflow-y: scroll;
+  padding: 10px;
+  background-color: white;
   margin-bottom: 10px;
 }
 
-#chat-form input, 
-#chat-form button,
-#leave {
-  padding: 12px;
-  border-radius: 12px;
-  font-size: 16px;
-  border: 1px solid #ddd;
+/* --- Message Styles --- */
+.message {
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  border-radius: 6px;
 }
 
-#chat-form input { 
-  flex: 2 1 auto; 
-  background: #fff; 
-  color: #333; 
+.message.self {
+  background-color: #dcf8c6;
+  text-align: right;
 }
 
-#chat-form input:focus {
-  outline: none;
-  border: 1px solid #00796b;
+.message.other {
+  background-color: #f1f0f0;
+  text-align: left;
 }
 
-#chat-form button { 
-  flex: 1 1 auto; 
-  background: #00796b; 
-  color: white; 
-  cursor: pointer; 
-  transition: 0.3s; 
+.message.system {
+  background-color: #ffeeba;
+  text-align: center;
+  font-style: italic;
+}
+
+/* --- Timestamp --- */
+.timestamp {
+  display: block;
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 2px;
+}
+
+/* --- Reactions --- */
+.reactions button {
+  background-color: transparent;
+  color: #333;
   border: none;
+  padding: 0 4px;
+  font-size: 0.9rem;
 }
 
-#chat-form button:hover { 
-  background: #005a4f; 
+.reactions span {
+  margin-left: 2px;
 }
 
-#leave {
-  max-width: 720px;
-  width: 100%;
-  background-color: #e74c3c;
-  color: white;
-  cursor: pointer;
-  border: none;
-  transition: 0.3s;
-}
-
-#leave:hover {
-  background-color: #c0392b;
-}
-
-@media (min-width: 600px) {
-  #chatbox { 
-    height: 70vh; 
-    padding: 16px; 
-  }
-  
-  body {
-    margin-top: 50px;
-  }
-}
-
-@media (max-width: 600px) {
-  #chat-form {
-    flex-direction: column;
-  }
-  
-  .message {
-    max-width: 90%;
-  }
+/* --- Online Users --- */
+#online-users {
+  margin-bottom: 10px;
+  font-weight: bold;
 }

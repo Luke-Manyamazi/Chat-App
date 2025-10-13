@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Group Chat (Polling)</title>
+  <title>Chat App</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Group Chat (Polling Version)</h1>
-  <div id="online-users">Online: 0</div>
-  <div id="chatbox"></div>
+  <h1>Welcome to the Group Chat App</h1>
+  <p>Select chat mode:</p>
+  <button onclick="startChat('polling')">Polling</button>
+  <button onclick="startChat('websocket')">WebSocket</button>
 
-  <form id="chat-form">
-    <input type="text" id="message" placeholder="Type a message" required>
-    <button type="submit">Send</button>
-  </form>
-
-  <button id="leave">Leave Chat</button>
-
-  <script src="script.js"></script>
+  <script>
+    function startChat(mode) {
+      // Save mode in session storage and go to chat page
+      sessionStorage.setItem("chatMode", mode);
+      window.location.href = "chat.html";
+    }
+  </script>
 </body>
 </html>
