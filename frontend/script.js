@@ -91,7 +91,7 @@ function react(id, type) {
   if (chatMode === "websocket") {
     wsSend({ type: "react", id, reaction: type });
   } else {
-    apiPost("/react", { id, type }).catch(console.error);
+    apiPost(`${API_URL}/react`, { id, type }).catch(console.error);
   }
 }
 
@@ -99,7 +99,7 @@ function react(id, type) {
 async function initUser() {
   currentUser = prompt("Enter your name:") || "Anonymous";
 
-  await apiPost("/join", { user: currentUser });
+  await apiPost(`${API_URL}/join`, { user: currentUser });
   updateOnline(onlineUsers);
 
   if (chatMode === "polling") startPolling();
@@ -156,14 +156,14 @@ chatForm.addEventListener("submit", async (e) => {
   if (chatMode === "websocket") {
     wsSend({ type: "message", user: currentUser, text });
   } else {
-    await apiPost("/messages", { user: currentUser, text });
+    await apiPost(`${API_URL}/messages`, { user: currentUser, text });
   }
   document.getElementById("message").value = "";
 });
 
 // --- Leave Chat ---
 async function leaveChat() {
-  try { await apiPost("/leave", { user: currentUser }); } catch {}
+  try { await apiPost(`${API_URL}/leave`, { user: currentUser }); } catch {}
   if (ws) ws.close();
   window.location.href = "/";
 }
