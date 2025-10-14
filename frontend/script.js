@@ -3,12 +3,12 @@
 // ----------------------------
 
 // Backend & WebSocket endpoints
-// const API_BASE = "https://luke-chat-app-backend.hosting.codeyourfuture.io";
-// const WS_URL = "wss://luke-chat-app-backend.hosting.codeyourfuture.io";
+const API_BASE = "https://luke-chat-app-backend.hosting.codeyourfuture.io";
+const WS_URL = "wss://luke-chat-app-backend.hosting.codeyourfuture.io";
 
 // for testing locally, uncomment below:
-const API_BASE = "http://localhost:3000";
-const WS_URL = "ws://localhost:3000";
+// const API_BASE = "http://localhost:3000";
+// const WS_URL = "ws://localhost:3000";
 
 // User state
 let currentUser = null;
