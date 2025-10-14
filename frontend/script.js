@@ -159,7 +159,7 @@ window.addEventListener("load", async () => {
   setInterval(loadMessages, 10000);
 });
 
-document.getElementById("leaveBtn").addEventListener("click", async () => {
+document.getElementById("leave").addEventListener("click", async () => {
   // Optionally notify backend (if supported)
   try {
     await apiPost("/leave", { user: currentUser });
