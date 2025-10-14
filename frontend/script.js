@@ -113,11 +113,11 @@ function renderMessage(msg) {
 // WebSocket Connection
 // ----------------------------
 function startWebSocket() {
-  console.log("🔌 Connecting to WebSocket...");
+  console.log("Connecting to WebSocket...");
   ws = new WebSocket(WS_URL);
 
   ws.onopen = () => console.log("✅ WebSocket connected");
-  ws.onerror = (err) => console.error("❌ WebSocket error:", err);
+  ws.onerror = (err) => console.error("WebSocket error:", err);
   ws.onclose = () => {
     console.warn("⚠️ WebSocket disconnected, retrying...");
     setTimeout(startWebSocket, 3000);
