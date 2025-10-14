@@ -68,8 +68,8 @@ function handleUserAction(req, res, action) {
   createSystemMessage(`${user} ${action}ed the chat`);
   res.json({ onlineUsers: Array.from(onlineUsers), count: onlineUsers.size });
 }
-app.post("/api/join", (req, res) => handleUserAction(req, "join"));
-app.post("/api/leave", (req, res) => handleUserAction(req, "leave"));
+app.post("/api/join", (req, res) => handleUserAction(req, res, "join"));
+app.post("/api/leave", (req, res) => handleUserAction(req, res, "leave"));
 
 app.post("/api/react", (req, res) => {
   const { id, type } = req.body;

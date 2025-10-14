@@ -5,6 +5,7 @@ body {
   padding: 20px;
   background: #f9f9f9;
   color: #333;
+  text-align: center;
 }
 
 h1 {
@@ -31,10 +32,13 @@ button:hover {
   border: 1px solid #ccc;
   border-radius: 6px;
   height: 400px;
+  width: 600px;
   overflow-y: scroll;
   padding: 10px;
   background-color: white;
   margin-bottom: 10px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* --- Message Styles --- */
@@ -85,4 +89,33 @@ button:hover {
 #online-users {
   margin-bottom: 10px;
   font-weight: bold;
+  text-align: center;
+}
+
+#message-form {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+#message {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  width: 20%;
+}
+
+#submit {
+  margin-left: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+}
+
+#leave {
+  background-color: #dc3545;
+  margin-left: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
 }
