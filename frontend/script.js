@@ -1,12 +1,8 @@
-// ----------------------------
-// Chat App Frontend Script
-// ----------------------------
-
 // Backend & WebSocket endpoints
 const API_BASE = "https://luke-chat-app-backend.hosting.codeyourfuture.io";
 const WS_URL = "wss://luke-chat-app-backend.hosting.codeyourfuture.io";
 
-// for testing locally, uncomment below:
+// for testing locally
 // const API_BASE = "http://localhost:3000";
 // const WS_URL = "ws://localhost:3000";
 
@@ -14,9 +10,7 @@ const WS_URL = "wss://luke-chat-app-backend.hosting.codeyourfuture.io";
 let currentUser = null;
 let ws = null;
 
-// ----------------------------
 // Helper Functions for API Calls
-// ----------------------------
 async function apiFetch(endpoint, options = {}) {
   const res = await fetch(`${API_BASE}${endpoint}`, {
     headers: { "Content-Type": "application/json" },
@@ -31,9 +25,7 @@ const apiGet = (path) => apiFetch(`/api${path}`, { method: "GET" });
 const apiPost = (path, body) =>
   apiFetch(`/api${path}`, { method: "POST", body: JSON.stringify(body) });
 
-// ----------------------------
 // Initialize User
-// ----------------------------
 async function initializeUser() {
   currentUser = localStorage.getItem("chatUser");
 
@@ -55,9 +47,7 @@ async function initializeUser() {
   }
 }
 
-// ----------------------------
 // Send Message
-// ----------------------------
 async function sendMessage(text) {
   if (!text.trim()) return;
 
@@ -73,9 +63,7 @@ async function sendMessage(text) {
   }
 }
 
-// ----------------------------
 // Load Messages (Polling Backup)
-// ----------------------------
 async function loadMessages() {
   try {
     const msgs = await apiGet("/messages");
@@ -87,9 +75,7 @@ async function loadMessages() {
   }
 }
 
-// ----------------------------
 // Render Message to UI
-// ----------------------------
 function renderMessage(msg) {
   const chatBox = document.getElementById("chatBox");
   const div = document.createElement("div");
@@ -109,9 +95,7 @@ function renderMessage(msg) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// ----------------------------
 // WebSocket Connection
-// ----------------------------
 function startWebSocket() {
   console.log("Connecting to WebSocket...");
   ws = new WebSocket(WS_URL);
@@ -142,17 +126,13 @@ function startWebSocket() {
   };
 }
 
-// ----------------------------
 // Online Users Update
-// ----------------------------
 function updateOnline(users) {
   const list = document.getElementById("onlineUsers");
   list.innerHTML = users.map((u) => `<li>${u}</li>`).join("");
 }
 
-// ----------------------------
 // Message Update (if edited)
-// ----------------------------
 function updateMessage(msg) {
   const all = document.querySelectorAll(".message");
   all.forEach((el) => {
@@ -162,9 +142,7 @@ function updateMessage(msg) {
   });
 }
 
-// ----------------------------
 // Event Listeners
-// ----------------------------
 document.getElementById("messageForm").addEventListener("submit", (e) => {
   e.preventDefault();
   const input = document.getElementById("message");
@@ -179,4 +157,28 @@ window.addEventListener("load", async () => {
 
   // Optional polling every 10 seconds (backup)
   setInterval(loadMessages, 10000);
+});
+
+document.getElementById("leaveBtn").addEventListener("click", async () => {
+  // Optionally notify backend (if supported)
+  try {
+    await apiPost("/leave", { user: currentUser });
+  } catch (err) {
+    console.warn("Could not notify backend about leaving:", err);
+  }
+
+  // Remove user from localStorage
+  localStorage.removeItem("chatUser");
+
+  // Show a system message in the chat box
+  renderMessage({
+    user: "System",
+    text: `${currentUser} has left the chat.`,
+    time: Date.now(),
+  });
+
+  // Optionally reload or redirect
+  setTimeout(() => {
+    window.location.reload();
+  }, 1000);
 });
