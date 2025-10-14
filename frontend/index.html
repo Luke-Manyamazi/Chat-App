@@ -1,23 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat App</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <h1>Welcome to the Group Chat App</h1>
-  <p>Select chat mode:</p>
-  <button onclick="startChat('polling')">Polling</button>
-  <button onclick="startChat('websocket')">WebSocket</button>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Chat App</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <h1>Welcome to the Group Chat App</h1>
+    <p>Select chat mode:</p>
+    <button onclick="startChat('polling')">Polling</button>
+    <button onclick="startChat('websocket')">WebSocket</button>
 
-  <script>
-    function startChat(mode) {
-      // Save mode in session storage and go to chat page
-      sessionStorage.setItem("chatMode", mode);
-      window.location.href = "chat.html";
-    }
-  </script>
-</body>
+    <script>
+      function startChat(mode) {
+        sessionStorage.setItem("chatMode", mode);
+        window.location.href = "chat.html";
+      }
+    </script>
+  </body>
 </html>

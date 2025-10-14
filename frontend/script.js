@@ -93,17 +93,16 @@ async function loadMessages() {
 function renderMessage(msg) {
   const chatBox = document.getElementById("chatBox");
   const div = document.createElement("div");
-  div.classList.add("message");
 
   const isMine = msg.user === currentUser;
-  div.classList.add(isMine ? "mine" : "theirs");
+  div.classList.add("message", isMine ? "self" : "other");
 
   div.innerHTML = `
-    <div class="meta">
-      <strong>${msg.user}</strong>
-      <span>${new Date(msg.time || Date.now()).toLocaleTimeString()}</span>
-    </div>
+    <div class="meta">${msg.user}</div>
     <div class="text">${msg.text}</div>
+    <span class="timestamp">${new Date(
+      msg.time || Date.now()
+    ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
   `;
 
   chatBox.appendChild(div);
@@ -168,7 +167,7 @@ function updateMessage(msg) {
 // ----------------------------
 document.getElementById("messageForm").addEventListener("submit", (e) => {
   e.preventDefault();
-  const input = document.getElementById("messageInput");
+  const input = document.getElementById("message");
   sendMessage(input.value);
   input.value = "";
 });
