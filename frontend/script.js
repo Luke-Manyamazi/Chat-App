@@ -75,24 +75,56 @@ async function loadMessages() {
   }
 }
 
-// Render Message to UI
 function renderMessage(msg) {
   const chatBox = document.getElementById("chatBox");
   const div = document.createElement("div");
 
-  const isMine = msg.user === currentUser;
-  div.classList.add("message", isMine ? "self" : "other");
+  if (msg.id) div.dataset.id = msg.id;
+
+  let className = "message";
+  if (msg.type === "system") {
+    className += " system"; // optional styling for system messages
+  } else {
+    const isMine = msg.user === currentUser;
+    className += isMine ? " self" : " other";
+  }
+
+  div.className = className;
+
+  const displayUser = msg.type === "system" ? "" : msg.user;
 
   div.innerHTML = `
-    <div class="meta">${msg.user}</div>
+    ${displayUser ? `<div class="meta">${displayUser}</div>` : ""}
     <div class="text">${msg.text}</div>
+    ${msg.type !== "system" ? `
+      <div class="reactions">
+        <span class="like" data-id="${msg.id}">👍 ${msg.likes || 0}</span>
+        <span class="dislike" data-id="${msg.id}">👎 ${msg.dislikes || 0}</span>
+      </div>` : ""}
     <span class="timestamp">${new Date(
-      msg.time || Date.now()
+      msg.timestamp || Date.now()
     ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
   `;
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
+
+  // Only attach event listeners for user messages
+  if (msg.type !== "system") {
+    div.querySelector(".like").addEventListener("click", () => reactToMessage(msg.id, "like"));
+    div.querySelector(".dislike").addEventListener("click", () => reactToMessage(msg.id, "dislike"));
+  }
+}
+
+
+// React to Message
+async function reactToMessage(id, type) {
+  try {
+    const updated = await apiPost("/react", { id, type });
+    updateMessage(updated); // update UI after reaction
+  } catch (err) {
+    console.error("❌ Failed to react:", err);
+  }
 }
 
 // WebSocket Connection
@@ -128,15 +160,16 @@ function startWebSocket() {
 
 // Online Users Update
 function updateOnline(users) {
-  const list = document.getElementById("onlineUsers");
-  list.innerHTML = users.map((u) => `<li>${u}</li>`).join("");
+  const count = users.length;
+  const text = count === 1 ? "1 user online" : `${count} users online`;
+  document.getElementById("onlineCount").textContent = text;
 }
 
-// Message Update (if edited)
+// Message Update
 function updateMessage(msg) {
   const all = document.querySelectorAll(".message");
   all.forEach((el) => {
-    if (el.dataset.id === msg.id) {
+    if (div.dataset.id === msg.id) {
       el.querySelector(".text").textContent = msg.text;
     }
   });
@@ -161,7 +194,7 @@ window.addEventListener("load", async () => {
 
 document.getElementById("leave").addEventListener("click", async () => {
   try {
-    await apiPost(`${API_BASE}/leave`, { user: currentUser });
+    await apiPost("/leave", { user: currentUser });
   } catch (err) {
     console.warn("Could not notify backend about leaving:", err);
   }
@@ -171,7 +204,6 @@ document.getElementById("leave").addEventListener("click", async () => {
 
   // Show a system message in the chat box
   renderMessage({
-    user: "System",
     text: `${currentUser} has left the chat.`,
     time: Date.now(),
   });

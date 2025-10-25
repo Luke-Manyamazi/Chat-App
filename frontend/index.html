@@ -6,17 +6,21 @@
     <title>Chat App</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+ <body>
+  <div class="page-wrap">
     <h1>Welcome to the Group Chat App</h1>
     <p>Select chat mode:</p>
-    <button onclick="startChat('polling')">Polling</button>
-    <button onclick="startChat('websocket')">WebSocket</button>
+    <div class="chat-mode-buttons">
+      <button onclick="startChat('polling')">Polling</button>
+      <button onclick="startChat('websocket')">WebSocket</button>
+    </div>
+  </div>
 
-    <script>
-      function startChat(mode) {
-        sessionStorage.setItem("chatMode", mode);
-        window.location.href = "chat.html";
-      }
-    </script>
-  </body>
+  <script>
+    function startChat(mode) {
+      sessionStorage.setItem("chatMode", mode);
+      window.location.href = "chat.html";
+    }
+  </script>
+</body>
 </html>

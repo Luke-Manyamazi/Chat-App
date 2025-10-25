@@ -78,13 +78,14 @@ button:nth-of-type(2) {
 }
 
 /* --- online bar --- */
-#onlineUsers {
-  padding: 10px 40px;
+#onlineCount {
+  padding: 8px 16px;
   background: #fafafa;
   border-bottom: 1px solid #eee;
   font-weight: 600;
+  text-align: center;
+  color: #333;
 }
-
 /* --- chat area --- */
 #chatBox {
   flex: 1;
@@ -148,13 +149,13 @@ button:nth-of-type(2) {
 
 .meta {
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   margin-bottom: 4px;
   color: #333;
 }
 
 .text {
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   line-height: 1.4;
 }
 
@@ -165,36 +166,40 @@ button:nth-of-type(2) {
   margin-top: 4px;
 }
 
+/* --- system messages --- */
 .message.system {
   align-self: center;
-  background: #fff3cd;
-  font-style: italic;
+  background: #fff3cd; /* optional light background */
   border-radius: 8px;
   padding: 6px 10px;
   max-width: 60%;
+  font-size: 0.8rem;
+  color: #777; /* same as timestamp */
+  font-weight: 400;
 }
 
+/* --- reactions --- */
 .reactions {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   justify-content: flex-end;
-  margin-top: 6px;
+  margin-top: 4px;
   align-items: center;
 }
 
-.reactions button {
-  border: none;
-  background: transparent;
+.reactions span {
   cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-size: 0.88rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  user-select: none;
 }
 
-.reactions button:hover {
-  background: rgba(0, 0, 0, 0.04);
+.reactions span:hover {
+  background: rgba(0, 0, 0, 0.08);
 }
 
+/* --- message form --- */
 #messageForm {
   display: flex;
   gap: 8px;
@@ -234,6 +239,19 @@ button:nth-of-type(2) {
   background: #b52d3a;
 }
 
+.chat-mode-buttons {
+  display: flex;
+  flex-direction: column; /* stack vertically */
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.chat-mode-buttons button {
+  min-width: 140px;
+  margin: 0;
+}
+
 /* --- responsive --- */
 @media (max-width: 480px) {
   .chat-container {
@@ -253,9 +271,9 @@ button:nth-of-type(2) {
   .timestamp {
     font-size: 0.6rem;
   }
-}
 
-  .timestamp {
+  .reactions span {
     font-size: 0.6rem;
+    padding: 1px 3px;
   }
 }
