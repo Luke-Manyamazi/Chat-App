@@ -15,15 +15,52 @@ body {
   min-height: 100vh;
 }
 
+/* --- landing page container --- */
 .page-wrap {
   width: 100%;
   max-width: 980px;
+  text-align: center;
 }
 
 /* --- header --- */
 h1 {
   text-align: center;
   margin: 0 0 16px;
+  font-size: 2rem;
+  color: #333;
+}
+
+/* --- landing page text --- */
+p {
+  font-size: 1rem;
+  margin-bottom: 20px;
+  color: #555;
+}
+
+/* --- buttons --- */
+button {
+  padding: 10px 20px;
+  margin: 0 10px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button:nth-of-type(1) {
+  background: #007bff;
+  color: white;
+}
+
+button:nth-of-type(2) {
+  background: #28a745;
+  color: white;
 }
 
 /* --- chat container --- */
@@ -40,7 +77,7 @@ h1 {
   min-height: 480px;
 }
 
-/* online bar */
+/* --- online bar --- */
 #onlineUsers {
   padding: 10px 40px;
   background: #fafafa;
@@ -48,7 +85,7 @@ h1 {
   font-weight: 600;
 }
 
-/* chat area */
+/* --- chat area --- */
 #chatBox {
   flex: 1;
   padding: 16px;
@@ -71,7 +108,6 @@ h1 {
   flex-direction: column;
 }
 
-/* my messages (right aligned, green bubble) */
 .message.self {
   align-self: flex-end;
   background: #dcf8c6;
@@ -79,7 +115,6 @@ h1 {
   text-align: right;
 }
 
-/* others’ messages (left aligned, white bubble) */
 .message.other {
   align-self: flex-start;
   background: #ffffff;
@@ -87,7 +122,6 @@ h1 {
   text-align: left;
 }
 
-/* bubble tails */
 .message.self::after,
 .message.other::after {
   content: "";
@@ -112,7 +146,6 @@ h1 {
   border-bottom: 0;
 }
 
-/* --- message metadata --- */
 .meta {
   font-weight: 600;
   font-size: 0.85rem;
@@ -132,7 +165,6 @@ h1 {
   margin-top: 4px;
 }
 
-/* --- system message --- */
 .message.system {
   align-self: center;
   background: #fff3cd;
@@ -142,7 +174,6 @@ h1 {
   max-width: 60%;
 }
 
-/* --- reactions --- */
 .reactions {
   display: flex;
   gap: 8px;
@@ -164,7 +195,6 @@ h1 {
   background: rgba(0, 0, 0, 0.04);
 }
 
-/* --- input area --- */
 #messageForm {
   display: flex;
   gap: 8px;
@@ -219,6 +249,11 @@ h1 {
   .text {
     font-size: 0.9rem;
   }
+
+  .timestamp {
+    font-size: 0.6rem;
+  }
+}
 
   .timestamp {
     font-size: 0.6rem;
