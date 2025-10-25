@@ -160,9 +160,8 @@ window.addEventListener("load", async () => {
 });
 
 document.getElementById("leave").addEventListener("click", async () => {
-  // Optionally notify backend (if supported)
   try {
-    await apiPost("/leave", { user: currentUser });
+    await apiPost(`${API_BASE}/leave`, { user: currentUser });
   } catch (err) {
     console.warn("Could not notify backend about leaving:", err);
   }
