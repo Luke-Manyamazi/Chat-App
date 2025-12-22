@@ -10,34 +10,38 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "../frontend")));
 
-// --- Chat State ---
 let messages = [];
 let onlineUsers = new Set();
-let wsClients = [];
+let wsClients = new Set();
 let pollingCallbacks = [];
 
-// --- Helper Functions ---
-function broadcastToPollingAndWS(data, type = "new-message") {
-  const msg = JSON.stringify({ type, ...data });
 
-  wsClients.forEach(c => c.connected && c.send(msg));
+function broadcastWS(data, type = "new-message") {
+  const msg = JSON.stringify({ type, ...data });
+  wsClients.forEach(conn => {
+    if (conn.connected) conn.send(msg);
+  });
+}
+
+
+function broadcastPolling(data) {
   while (pollingCallbacks.length) {
-    const cb = pollingCallbacks.pop();
-    cb([data]);
+    pollingCallbacks.pop()([data]);
   }
 }
 
 function createSystemMessage(text) {
   const msg = {
     id: messages.length + 1,
-    type: "system", // for optional styling
+    type: "system",
     text,
     timestamp: new Date().toISOString(),
     likes: 0,
     dislikes: 0
   };
   messages.push(msg);
-  broadcastToPollingAndWS(msg);
+  broadcastWS(msg);
+  broadcastPolling(msg);
   return msg;
 }
 
@@ -45,28 +49,43 @@ function getMessageById(id) {
   return messages.find(m => m.id === id);
 }
 
-// --- Routes ---
-app.get("/api/online-users", (req, res) =>
-  res.json({ onlineUsers: Array.from(onlineUsers), count: onlineUsers.size })
-);
+// Polling support
+
+app.get("/api/online-users", (req, res) => {
+  res.json({
+    onlineUsers: Array.from(onlineUsers),
+    count: onlineUsers.size
+  });
+});
 
 app.get("/api/messages", (req, res) => {
   const since = parseInt(req.query.since) || 0;
-  const msgs = messages.filter(m => m.id > since);
+  const newMessages = messages.filter(m => m.id > since);
 
-  if (msgs.length) return res.json(msgs);
+  if (newMessages.length) return res.json(newMessages);
 
   let responded = false;
-  const cb = value => { if (!responded) { responded = true; res.json(value); } };
+  const cb = data => {
+    if (!responded) {
+      responded = true;
+      res.json(data);
+    }
+  };
+
   pollingCallbacks.push(cb);
-  setTimeout(() => { if (!responded) cb([]); }, 25000);
+
+  setTimeout(() => {
+    if (!responded) cb([]);
+  }, 25000);
 });
 
 app.post("/api/messages", (req, res) => {
   const { user, text } = req.body;
-  if (!user || !text) return res.status(400).json({ error: "User and text required" });
+  if (!user || !text) {
+    return res.status(400).json({ error: "User and text required" });
+  }
 
-  const newMsg = {
+  const msg = {
     id: messages.length + 1,
     user,
     text,
@@ -75,9 +94,12 @@ app.post("/api/messages", (req, res) => {
     dislikes: 0,
     type: "message"
   };
-  messages.push(newMsg);
-  res.status(201).json(newMsg);
-  broadcastToPollingAndWS(newMsg);
+
+  messages.push(msg);
+  res.status(201).json(msg);
+
+  broadcastWS(msg);
+  broadcastPolling(msg);
 });
 
 function handleUserAction(req, res, action) {
@@ -87,14 +109,17 @@ function handleUserAction(req, res, action) {
   if (action === "join") {
     onlineUsers.add(user);
     createSystemMessage(`${user} has joined the chat`);
-  } else if (action === "leave") {
-    onlineUsers.delete(user);
-    createSystemMessage(`${user} has left the chat`);
-  } else {
-    return res.status(400).json({ error: "Invalid action" });
   }
 
-  res.json({ onlineUsers: Array.from(onlineUsers), count: onlineUsers.size });
+  if (action === "leave") {
+    onlineUsers.delete(user);
+    createSystemMessage(`${user} has left the chat`);
+  }
+
+  res.json({
+    onlineUsers: Array.from(onlineUsers),
+    count: onlineUsers.size
+  });
 }
 
 app.post("/api/join", (req, res) => handleUserAction(req, res, "join"));
@@ -102,35 +127,40 @@ app.post("/api/leave", (req, res) => handleUserAction(req, res, "leave"));
 
 app.post("/api/react", (req, res) => {
   const { id, type } = req.body;
-  if (!id || !type) return res.status(400).json({ error: "id and type required" });
-
   const msg = getMessageById(id);
+
   if (!msg) return res.status(404).json({ error: "Message not found" });
 
   if (type === "like") msg.likes++;
   if (type === "dislike") msg.dislikes++;
 
   res.json(msg);
-  broadcastToPollingAndWS(msg, "update");
+  broadcastWS(msg, "update");
+  broadcastPolling(msg);
 });
 
-// --- WebSocket ---
+// Websocket server setup
+
 const server = http.createServer(app);
-const wsServer = new WebSocketServer({ httpServer: server, autoAcceptConnections: false });
+const wsServer = new WebSocketServer({
+  httpServer: server,
+  autoAcceptConnections: false
+});
 
 wsServer.on("request", req => {
   const conn = req.accept(null, req.origin);
-  wsClients.push(conn);
+  wsClients.add(conn);
 
-  // Send current state
+  // Send lightweight init (last 30 messages only)
   conn.send(JSON.stringify({
     type: "init",
-    messages,
+    messages: messages.slice(-30),
     onlineUsers: Array.from(onlineUsers)
   }));
 
   conn.on("message", msg => {
     if (msg.type !== "utf8") return;
+
     try {
       const data = JSON.parse(msg.utf8Data);
 
@@ -144,16 +174,21 @@ wsServer.on("request", req => {
           dislikes: 0,
           type: "message"
         };
+
         messages.push(newMsg);
-        broadcastToPollingAndWS(newMsg);
+        broadcastWS(newMsg);
+        broadcastPolling(newMsg);
       }
 
       if (data.type === "react") {
         const m = getMessageById(data.id);
         if (!m) return;
+
         if (data.reaction === "like") m.likes++;
         if (data.reaction === "dislike") m.dislikes++;
-        broadcastToPollingAndWS(m, "update");
+
+        broadcastWS(m, "update");
+        broadcastPolling(m);
       }
 
       if (data.type === "join") {
@@ -167,17 +202,22 @@ wsServer.on("request", req => {
       }
 
     } catch (err) {
-      console.error("WS message parse error:", err);
+      console.error("WebSocket parse error:", err);
     }
   });
 
   conn.on("close", () => {
-    wsClients = wsClients.filter(c => c !== conn);
+    wsClients.delete(conn);
   });
 
-  conn.on("error", console.error);
+  conn.on("error", err => {
+    console.error("WebSocket error:", err);
+    wsClients.delete(conn);
+  });
 });
 
-// --- Start Server ---
+
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+});
