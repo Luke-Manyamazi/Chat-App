@@ -117,7 +117,7 @@ function updateOnline(users) {
 function sendMessage(text) {
   if (!text.trim() || !ws || ws.readyState !== WebSocket.OPEN) return;
 
-  // Optimistic UI
+  
   renderMessage({
     id: `temp-${Date.now()}`,
     user: currentUser,
@@ -167,6 +167,7 @@ function startWebSocket() {
         break;
 
       case "new-message":
+      case "message":
         renderMessage(data);
         break;
 
