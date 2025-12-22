@@ -182,7 +182,7 @@ function startWebSocket() {
 
   ws.onclose = () => {
     console.warn("⚠️ WebSocket disconnected — polling fallback enabled");
-    pollingFallback = setInterval(loadMessages, 10000);
+    pollingFallback = setInterval(loadMessages, 5000);
     setTimeout(startWebSocket, 3000);
   };
 
