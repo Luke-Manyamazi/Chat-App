@@ -1,6 +1,6 @@
 
-const API_BASE = "https://luke-chat-app-backend.hosting.codeyourfuture.io";
-const WS_URL = "wss://luke-chat-app-backend.hosting.codeyourfuture.io";
+const API_BASE = "/api";
+const WS_URL = (window.location.protocol === "https:" ? "wss" : "ws") + "://" + window.location.host + "/ws";
 
 // Local testing
 // const API_BASE = "http://localhost:3000";
