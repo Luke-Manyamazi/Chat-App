@@ -126,6 +126,15 @@ function updateOnline(users) {
   document.getElementById("onlineCount").textContent = text;
 }
 
+async function updateOnlineUsers() {
+  try {
+    const data = await apiGet("/online-users");
+    updateOnline(data.onlineUsers);
+  } catch (err) {
+    console.error("Failed to update online users:", err);
+  }
+}
+
 function sendMessage(text) {
   if (!text.trim() || !ws || ws.readyState !== WebSocket.OPEN) return;
 
@@ -195,14 +204,16 @@ function startWebSocket() {
           });
         }
         renderMessage(data);
+        if (
+          data.type === "system" &&
+          (data.text.includes("joined") || data.text.includes("left"))
+        ) {
+          updateOnlineUsers();
+        }
         break;
 
       case "update":
-        if (data.type === "system") {
-          renderMessage(data);
-        } else {
-          updateMessage(data);
-        }
+        updateMessage(data);
         break;
 
       default:
