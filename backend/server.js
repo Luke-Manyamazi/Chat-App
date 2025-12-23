@@ -22,26 +22,9 @@ if (fs.existsSync(path.join(frontendPath, "index.html"))) {
   app.get("/chat.html", (req, res) => {
     res.sendFile(path.join(frontendPath, "chat.html"));
   });
-  console.log("✅ Frontend files found at:", frontendPath);
 } else {
-  console.log(
-    "⚠️  Frontend files not found. API endpoints will work, but frontend won't be served."
-  );
-  console.log(
-    "   To serve frontend, set FRONTEND_PATH environment variable or copy frontend files."
-  );
   app.get("/", (req, res) => {
-    res.json({
-      message: "Chat App API is running",
-      endpoints: {
-        health: "/health",
-        messages: "/api/messages",
-        join: "/api/join",
-        react: "/api/react",
-        onlineUsers: "/api/online-users",
-      },
-      note: "Frontend files not found. API endpoints are available.",
-    });
+    res.json({ message: "Chat App API is running" });
   });
 }
 
@@ -53,13 +36,9 @@ let pollingCallbacks = [];
 function broadcastWS(data, type = "new-message") {
   const msg = JSON.stringify({ type, ...data });
   wsClients.forEach((conn) => {
-    if (conn.connected) {
-      try {
-        conn.send(msg);
-      } catch (err) {
-        wsClients.delete(conn);
-      }
-    } else {
+    try {
+      if (conn.connected) conn.send(msg);
+    } catch (err) {
       wsClients.delete(conn);
     }
   });
@@ -201,7 +180,6 @@ wsServer.on("request", (req) => {
       })
     );
   } catch (err) {
-    console.error("Failed to send init message:", err.message);
     wsClients.delete(conn);
     return;
   }
@@ -249,7 +227,7 @@ wsServer.on("request", (req) => {
         createSystemMessage(`${data.user} has left the chat`);
       }
     } catch (err) {
-      console.error("WebSocket parse error:", err);
+      // Ignore parse errors
     }
   });
 
@@ -257,10 +235,7 @@ wsServer.on("request", (req) => {
     wsClients.delete(conn);
   });
 
-  conn.on("error", (err) => {
-    if (err.code !== "ECONNRESET") {
-      console.error("WebSocket error:", err.message || err);
-    }
+  conn.on("error", () => {
     wsClients.delete(conn);
   });
 });
