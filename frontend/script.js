@@ -192,6 +192,10 @@ function startWebSocket() {
         updateOnline(data.onlineUsers);
         break;
 
+      case "online-users":
+        updateOnline(data.onlineUsers);
+        break;
+
       case "new-message":
       case "message":
         if (data.user === currentUser && typeof data.id === "number") {
@@ -204,12 +208,6 @@ function startWebSocket() {
           });
         }
         renderMessage(data);
-        if (
-          data.type === "system" &&
-          (data.text.includes("joined") || data.text.includes("left"))
-        ) {
-          updateOnlineUsers();
-        }
         break;
 
       case "update":

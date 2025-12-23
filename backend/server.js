@@ -2,31 +2,15 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const { server: WebSocketServer } = require("websocket");
-const path = require("path");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const fs = require("fs");
-
-const frontendPath =
-  process.env.FRONTEND_PATH || path.join(__dirname, "../frontend");
-
-if (fs.existsSync(path.join(frontendPath, "index.html"))) {
-  app.use(express.static(frontendPath));
-  app.get("/", (req, res) => {
-    res.sendFile(path.join(frontendPath, "index.html"));
-  });
-  app.get("/chat.html", (req, res) => {
-    res.sendFile(path.join(frontendPath, "chat.html"));
-  });
-} else {
-  app.get("/", (req, res) => {
-    res.json({ message: "Chat App API is running" });
-  });
-}
+app.get("/", (req, res) => {
+  res.json({ message: "Chat App API is running" });
+});
 
 let messages = [];
 let onlineUsers = new Set();
@@ -138,6 +122,11 @@ function handleUserAction(req, res, action) {
     createSystemMessage(`${user} has left the chat`);
   }
 
+  broadcastWS(
+    { onlineUsers: Array.from(onlineUsers), count: onlineUsers.size },
+    "online-users"
+  );
+
   res.json({
     onlineUsers: Array.from(onlineUsers),
     count: onlineUsers.size,
@@ -220,11 +209,19 @@ wsServer.on("request", (req) => {
       if (data.type === "join") {
         onlineUsers.add(data.user);
         createSystemMessage(`${data.user} has joined the chat`);
+        broadcastWS(
+          { onlineUsers: Array.from(onlineUsers), count: onlineUsers.size },
+          "online-users"
+        );
       }
 
       if (data.type === "leave") {
         onlineUsers.delete(data.user);
         createSystemMessage(`${data.user} has left the chat`);
+        broadcastWS(
+          { onlineUsers: Array.from(onlineUsers), count: onlineUsers.size },
+          "online-users"
+        );
       }
     } catch (err) {
       // Ignore parse errors
