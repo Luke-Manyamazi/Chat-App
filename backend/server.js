@@ -10,15 +10,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const fs = require("fs");
-let frontendPath = path.resolve(process.cwd(), "frontend");
+let frontendPath = path.resolve(__dirname, "../frontend");
 if (!fs.existsSync(path.join(frontendPath, "index.html"))) {
-  frontendPath = path.resolve(process.cwd(), "../frontend");
+  frontendPath = path.resolve(process.cwd(), "frontend");
+  if (!fs.existsSync(path.join(frontendPath, "index.html"))) {
+    frontendPath = path.resolve(process.cwd(), "../frontend");
+  }
 }
-app.use(express.static(frontendPath));
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
-});
+app.use(express.static(frontendPath, { index: "index.html" }));
 
 let messages = [];
 let onlineUsers = new Set();
