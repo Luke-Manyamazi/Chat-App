@@ -112,9 +112,6 @@ function updateMessage(msg) {
     return;
   }
 
-  const textEl = existing.querySelector(".text");
-  if (textEl) textEl.textContent = msg.text;
-
   const likeEl = existing.querySelector(".like");
   const dislikeEl = existing.querySelector(".dislike");
   if (likeEl) likeEl.textContent = `👍 ${msg.likes || 0}`;
@@ -201,7 +198,11 @@ function startWebSocket() {
         break;
 
       case "update":
-        updateMessage(data);
+        if (data.type === "system") {
+          renderMessage(data);
+        } else {
+          updateMessage(data);
+        }
         break;
 
       default:
