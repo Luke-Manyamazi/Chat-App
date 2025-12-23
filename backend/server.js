@@ -10,15 +10,30 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const fs = require("fs");
+
+console.log("__dirname:", __dirname);
+console.log("process.cwd():", process.cwd());
+
 let frontendPath = path.resolve(__dirname, "../frontend");
+console.log("Trying path 1:", frontendPath);
 if (!fs.existsSync(path.join(frontendPath, "index.html"))) {
   frontendPath = path.resolve(process.cwd(), "frontend");
+  console.log("Trying path 2:", frontendPath);
   if (!fs.existsSync(path.join(frontendPath, "index.html"))) {
     frontendPath = path.resolve(process.cwd(), "../frontend");
+    console.log("Trying path 3:", frontendPath);
+    if (!fs.existsSync(path.join(frontendPath, "index.html"))) {
+      frontendPath = path.join(__dirname, "../frontend");
+      console.log("Trying path 4:", frontendPath);
+      if (!fs.existsSync(path.join(frontendPath, "index.html"))) {
+        frontendPath = path.join(process.cwd(), "frontend");
+        console.log("Trying path 5:", frontendPath);
+      }
+    }
   }
 }
 
-console.log("Frontend path:", frontendPath);
+console.log("Final frontend path:", frontendPath);
 console.log(
   "Index.html exists:",
   fs.existsSync(path.join(frontendPath, "index.html"))
