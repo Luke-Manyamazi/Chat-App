@@ -30,6 +30,19 @@ if (fs.existsSync(path.join(frontendPath, "index.html"))) {
   console.log(
     "   To serve frontend, set FRONTEND_PATH environment variable or copy frontend files."
   );
+  app.get("/", (req, res) => {
+    res.json({
+      message: "Chat App API is running",
+      endpoints: {
+        health: "/health",
+        messages: "/api/messages",
+        join: "/api/join",
+        react: "/api/react",
+        onlineUsers: "/api/online-users",
+      },
+      note: "Frontend files not found. API endpoints are available.",
+    });
+  });
 }
 
 let messages = [];
