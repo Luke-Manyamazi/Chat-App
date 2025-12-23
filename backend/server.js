@@ -12,6 +12,16 @@ app.use(express.urlencoded({ extended: true }));
 const frontendPath = path.resolve(__dirname, "../frontend");
 app.use(express.static(frontendPath, { index: "index.html" }));
 
+app.get("/", (req, res) => {
+  const indexPath = path.join(frontendPath, "index.html");
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error("Error serving index.html:", err);
+      res.status(500).send("Error loading page");
+    }
+  });
+});
+
 let messages = [];
 let onlineUsers = new Set();
 let wsClients = new Set();
