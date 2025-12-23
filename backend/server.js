@@ -146,7 +146,9 @@ app.post("/api/react", (req, res) => {
   if (type === "dislike") msg.dislikes++;
 
   res.json(msg);
-  broadcastWS(msg, "update");
+  const updateData = { ...msg };
+  delete updateData.type;
+  broadcastWS(updateData, "update");
   broadcastPolling(msg);
 });
 
@@ -202,7 +204,9 @@ wsServer.on("request", (req) => {
         if (data.reaction === "like") m.likes++;
         if (data.reaction === "dislike") m.dislikes++;
 
-        broadcastWS(m, "update");
+        const updateData = { ...m };
+        delete updateData.type;
+        broadcastWS(updateData, "update");
         broadcastPolling(m);
       }
 
