@@ -9,10 +9,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(express.static(path.join(__dirname, "../frontend")));
+const fs = require("fs");
+let frontendPath = path.resolve(process.cwd(), "frontend");
+if (!fs.existsSync(path.join(frontendPath, "index.html"))) {
+  frontendPath = path.resolve(process.cwd(), "../frontend");
+}
+app.use(express.static(frontendPath));
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/index.html"));
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 let messages = [];
