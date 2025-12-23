@@ -3,37 +3,13 @@ const cors = require("cors");
 const http = require("http");
 const { server: WebSocketServer } = require("websocket");
 const path = require("path");
-const fs = require("fs");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-let frontendPath = path.resolve(__dirname, "../frontend");
-let indexPath = path.resolve(frontendPath, "index.html");
-
-if (!fs.existsSync(indexPath)) {
-  frontendPath = path.resolve(process.cwd(), "frontend");
-  indexPath = path.resolve(frontendPath, "index.html");
-}
-
-if (!fs.existsSync(indexPath)) {
-  frontendPath = path.resolve(process.cwd(), "../frontend");
-  indexPath = path.resolve(frontendPath, "index.html");
-}
-
-app.use(express.static(frontendPath, { index: "index.html" }));
-
-app.get("/", (req, res) => {
-  if (!fs.existsSync(indexPath)) {
-    console.error("index.html not found at:", indexPath);
-    console.error("__dirname:", __dirname);
-    console.error("process.cwd():", process.cwd());
-    return res.status(500).send("Frontend files not found");
-  }
-  res.sendFile(indexPath);
-});
+app.use(express.static(path.join(__dirname, "../frontend")));
 
 let messages = [];
 let onlineUsers = new Set();
