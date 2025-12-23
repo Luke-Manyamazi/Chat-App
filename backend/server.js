@@ -36,12 +36,47 @@ if (!frontendPath) {
 }
 
 if (!frontendPath || !fs.existsSync(path.join(frontendPath, "index.html"))) {
-  console.error("❌ Frontend files not found!");
-  console.error("To fix this in Coolify:");
-  console.error("1. Add a build command: cp -r ../frontend ./frontend");
-  console.error("2. Or set FRONTEND_PATH environment variable");
-  console.error("3. Or configure Coolify to include the frontend folder");
-  frontendPath = path.join(__dirname, "frontend");
+  const sourcePath = path.join(__dirname, "../frontend");
+  const targetPath = path.join(__dirname, "frontend");
+
+  if (fs.existsSync(path.join(sourcePath, "index.html"))) {
+    console.log("Attempting to copy frontend files...");
+    try {
+      function copyRecursive(src, dest) {
+        if (!fs.existsSync(dest)) {
+          fs.mkdirSync(dest, { recursive: true });
+        }
+        const entries = fs.readdirSync(src, { withFileTypes: true });
+        entries.forEach((entry) => {
+          const srcPath = path.join(src, entry.name);
+          const destPath = path.join(dest, entry.name);
+          if (entry.isDirectory()) {
+            copyRecursive(srcPath, destPath);
+          } else {
+            fs.copyFileSync(srcPath, destPath);
+          }
+        });
+      }
+      copyRecursive(sourcePath, targetPath);
+      console.log("✅ Frontend files copied successfully!");
+      frontendPath = targetPath;
+    } catch (err) {
+      console.error("Failed to copy frontend files:", err.message);
+    }
+  }
+
+  if (!frontendPath || !fs.existsSync(path.join(frontendPath, "index.html"))) {
+    console.error("❌ Frontend files not found!");
+    console.error("To fix this in Coolify:");
+    console.error(
+      "1. Configure Coolify to deploy from project root (not just backend folder)"
+    );
+    console.error("2. Or set FRONTEND_PATH environment variable");
+    console.error(
+      "3. Or manually copy frontend folder into backend before deployment"
+    );
+    frontendPath = path.join(__dirname, "frontend");
+  }
 }
 
 app.get("/", (req, res) => {
