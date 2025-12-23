@@ -8,11 +8,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "../frontend")));
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/index.html"));
-});
+const frontendPath = path.resolve(__dirname, "../frontend");
+app.use(express.static(frontendPath, { index: "index.html" }));
 
 let messages = [];
 let onlineUsers = new Set();
