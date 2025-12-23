@@ -11,6 +11,10 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static(path.join(__dirname, "../frontend")));
 
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/index.html"));
+});
+
 let messages = [];
 let onlineUsers = new Set();
 let wsClients = new Set();
