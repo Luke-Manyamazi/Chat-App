@@ -10,6 +10,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "../frontend")));
 
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/index.html"));
+});
+
 let messages = [];
 let onlineUsers = new Set();
 let wsClients = new Set();
@@ -55,7 +59,9 @@ function getMessageById(id) {
   return messages.find((m) => m.id === id);
 }
 
-// Polling support
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
 
 app.get("/api/online-users", (req, res) => {
   res.json({
@@ -145,8 +151,6 @@ app.post("/api/react", (req, res) => {
   broadcastPolling(msg);
 });
 
-// Websocket server setup
-
 const server = http.createServer(app);
 const wsServer = new WebSocketServer({
   httpServer: server,
@@ -157,7 +161,6 @@ wsServer.on("request", (req) => {
   const conn = req.accept(null, req.origin);
   wsClients.add(conn);
 
-  // Send lightweight init (last 30 messages only)
   try {
     conn.send(
       JSON.stringify({
