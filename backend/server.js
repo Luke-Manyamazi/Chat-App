@@ -11,37 +11,37 @@ app.use(express.urlencoded({ extended: true }));
 
 const fs = require("fs");
 
-const possiblePaths = [
-  path.join(__dirname, "../frontend"),
-  path.join(__dirname, "frontend"),
-  path.join(__dirname, "../public"),
-  path.join(__dirname, "public"),
-  path.join(process.cwd(), "frontend"),
-  path.join(process.cwd(), "public"),
-  path.resolve(__dirname, "../frontend"),
-  path.resolve(process.cwd(), "frontend"),
-];
+let frontendPath = process.env.FRONTEND_PATH || null;
 
-let frontendPath = null;
-for (const testPath of possiblePaths) {
-  const indexPath = path.join(testPath, "index.html");
-  if (fs.existsSync(indexPath)) {
-    frontendPath = testPath;
-    console.log("Found frontend at:", frontendPath);
-    break;
+if (!frontendPath) {
+  const possiblePaths = [
+    path.join(__dirname, "frontend"),
+    path.join(process.cwd(), "frontend"),
+    path.join(__dirname, "../frontend"),
+    path.join(__dirname, "../public"),
+    path.join(__dirname, "public"),
+    path.join(process.cwd(), "public"),
+    path.resolve(__dirname, "../frontend"),
+    path.resolve(process.cwd(), "frontend"),
+  ];
+
+  for (const testPath of possiblePaths) {
+    const indexPath = path.join(testPath, "index.html");
+    if (fs.existsSync(indexPath)) {
+      frontendPath = testPath;
+      console.log("Found frontend at:", frontendPath);
+      break;
+    }
   }
 }
 
-if (!frontendPath) {
-  console.error("Frontend not found! Checked paths:");
-  possiblePaths.forEach((p) => {
-    console.error(`  - ${p} (exists: ${fs.existsSync(p)})`);
-  });
-  console.error("Contents of /app:", fs.readdirSync("/app"));
-  if (fs.existsSync("/")) {
-    console.error("Contents of /:", fs.readdirSync("/"));
-  }
-  frontendPath = path.join(__dirname, "../frontend");
+if (!frontendPath || !fs.existsSync(path.join(frontendPath, "index.html"))) {
+  console.error("❌ Frontend files not found!");
+  console.error("To fix this in Coolify:");
+  console.error("1. Add a build command: cp -r ../frontend ./frontend");
+  console.error("2. Or set FRONTEND_PATH environment variable");
+  console.error("3. Or configure Coolify to include the frontend folder");
+  frontendPath = path.join(__dirname, "frontend");
 }
 
 app.get("/", (req, res) => {
