@@ -17,7 +17,34 @@ if (!fs.existsSync(path.join(frontendPath, "index.html"))) {
     frontendPath = path.resolve(process.cwd(), "../frontend");
   }
 }
-app.use(express.static(frontendPath, { index: "index.html" }));
+
+console.log("Frontend path:", frontendPath);
+console.log(
+  "Index.html exists:",
+  fs.existsSync(path.join(frontendPath, "index.html"))
+);
+
+app.get("/", (req, res) => {
+  const indexPath = path.join(frontendPath, "index.html");
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    console.error("Index.html not found at:", indexPath);
+    res.status(404).send("Frontend files not found");
+  }
+});
+
+app.get("/chat.html", (req, res) => {
+  const chatPath = path.join(frontendPath, "chat.html");
+  if (fs.existsSync(chatPath)) {
+    res.sendFile(chatPath);
+  } else {
+    console.error("Chat.html not found at:", chatPath);
+    res.status(404).send("Chat page not found");
+  }
+});
+
+app.use(express.static(frontendPath));
 
 let messages = [];
 let onlineUsers = new Set();
