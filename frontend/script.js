@@ -105,6 +105,8 @@ function renderMessage(msg) {
 }
 
 function updateMessage(msg) {
+  if (!msg || !msg.id) return;
+
   const existing = document.querySelector(`[data-id="${msg.id}"]`);
 
   if (!existing) {
@@ -114,8 +116,13 @@ function updateMessage(msg) {
 
   const likeEl = existing.querySelector(".like");
   const dislikeEl = existing.querySelector(".dislike");
-  if (likeEl) likeEl.textContent = `👍 ${msg.likes || 0}`;
-  if (dislikeEl) dislikeEl.textContent = `👎 ${msg.dislikes || 0}`;
+
+  if (likeEl) {
+    likeEl.textContent = `👍 ${msg.likes || 0}`;
+  }
+  if (dislikeEl) {
+    dislikeEl.textContent = `👎 ${msg.dislikes || 0}`;
+  }
 
   existing.classList.remove("pending");
 }
@@ -207,6 +214,10 @@ function startWebSocket() {
             }
           });
         }
+        renderMessage(data);
+        break;
+
+      case "system":
         renderMessage(data);
         break;
 
