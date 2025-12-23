@@ -11,95 +11,26 @@ app.use(express.urlencoded({ extended: true }));
 
 const fs = require("fs");
 
-let frontendPath = process.env.FRONTEND_PATH || null;
+const frontendPath =
+  process.env.FRONTEND_PATH || path.join(__dirname, "../frontend");
 
-if (!frontendPath) {
-  const possiblePaths = [
-    path.join(__dirname, "frontend"),
-    path.join(process.cwd(), "frontend"),
-    path.join(__dirname, "../frontend"),
-    path.join(__dirname, "../public"),
-    path.join(__dirname, "public"),
-    path.join(process.cwd(), "public"),
-    path.resolve(__dirname, "../frontend"),
-    path.resolve(process.cwd(), "frontend"),
-  ];
-
-  for (const testPath of possiblePaths) {
-    const indexPath = path.join(testPath, "index.html");
-    if (fs.existsSync(indexPath)) {
-      frontendPath = testPath;
-      console.log("Found frontend at:", frontendPath);
-      break;
-    }
-  }
+if (fs.existsSync(path.join(frontendPath, "index.html"))) {
+  app.use(express.static(frontendPath));
+  app.get("/", (req, res) => {
+    res.sendFile(path.join(frontendPath, "index.html"));
+  });
+  app.get("/chat.html", (req, res) => {
+    res.sendFile(path.join(frontendPath, "chat.html"));
+  });
+  console.log("✅ Frontend files found at:", frontendPath);
+} else {
+  console.log(
+    "⚠️  Frontend files not found. API endpoints will work, but frontend won't be served."
+  );
+  console.log(
+    "   To serve frontend, set FRONTEND_PATH environment variable or copy frontend files."
+  );
 }
-
-if (!frontendPath || !fs.existsSync(path.join(frontendPath, "index.html"))) {
-  const sourcePath = path.join(__dirname, "../frontend");
-  const targetPath = path.join(__dirname, "frontend");
-
-  if (fs.existsSync(path.join(sourcePath, "index.html"))) {
-    console.log("Attempting to copy frontend files...");
-    try {
-      function copyRecursive(src, dest) {
-        if (!fs.existsSync(dest)) {
-          fs.mkdirSync(dest, { recursive: true });
-        }
-        const entries = fs.readdirSync(src, { withFileTypes: true });
-        entries.forEach((entry) => {
-          const srcPath = path.join(src, entry.name);
-          const destPath = path.join(dest, entry.name);
-          if (entry.isDirectory()) {
-            copyRecursive(srcPath, destPath);
-          } else {
-            fs.copyFileSync(srcPath, destPath);
-          }
-        });
-      }
-      copyRecursive(sourcePath, targetPath);
-      console.log("✅ Frontend files copied successfully!");
-      frontendPath = targetPath;
-    } catch (err) {
-      console.error("Failed to copy frontend files:", err.message);
-    }
-  }
-
-  if (!frontendPath || !fs.existsSync(path.join(frontendPath, "index.html"))) {
-    console.error("❌ Frontend files not found!");
-    console.error("To fix this in Coolify:");
-    console.error(
-      "1. Configure Coolify to deploy from project root (not just backend folder)"
-    );
-    console.error("2. Or set FRONTEND_PATH environment variable");
-    console.error(
-      "3. Or manually copy frontend folder into backend before deployment"
-    );
-    frontendPath = path.join(__dirname, "frontend");
-  }
-}
-
-app.get("/", (req, res) => {
-  const indexPath = path.join(frontendPath, "index.html");
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    console.error("Index.html not found at:", indexPath);
-    res.status(404).send("Frontend files not found");
-  }
-});
-
-app.get("/chat.html", (req, res) => {
-  const chatPath = path.join(frontendPath, "chat.html");
-  if (fs.existsSync(chatPath)) {
-    res.sendFile(chatPath);
-  } else {
-    console.error("Chat.html not found at:", chatPath);
-    res.status(404).send("Chat page not found");
-  }
-});
-
-app.use(express.static(frontendPath));
 
 let messages = [];
 let onlineUsers = new Set();
