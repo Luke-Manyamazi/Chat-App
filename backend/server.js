@@ -15,14 +15,20 @@ let onlineUsers = new Set();
 let wsClients = new Set();
 let pollingCallbacks = [];
 
-
 function broadcastWS(data, type = "new-message") {
   const msg = JSON.stringify({ type, ...data });
-  wsClients.forEach(conn => {
-    if (conn.connected) conn.send(msg);
+  wsClients.forEach((conn) => {
+    if (conn.connected) {
+      try {
+        conn.send(msg);
+      } catch (err) {
+        wsClients.delete(conn);
+      }
+    } else {
+      wsClients.delete(conn);
+    }
   });
 }
-
 
 function broadcastPolling(data) {
   while (pollingCallbacks.length) {
@@ -37,7 +43,7 @@ function createSystemMessage(text) {
     text,
     timestamp: new Date().toISOString(),
     likes: 0,
-    dislikes: 0
+    dislikes: 0,
   };
   messages.push(msg);
   broadcastWS(msg);
@@ -46,7 +52,7 @@ function createSystemMessage(text) {
 }
 
 function getMessageById(id) {
-  return messages.find(m => m.id === id);
+  return messages.find((m) => m.id === id);
 }
 
 // Polling support
@@ -54,18 +60,18 @@ function getMessageById(id) {
 app.get("/api/online-users", (req, res) => {
   res.json({
     onlineUsers: Array.from(onlineUsers),
-    count: onlineUsers.size
+    count: onlineUsers.size,
   });
 });
 
 app.get("/api/messages", (req, res) => {
   const since = parseInt(req.query.since) || 0;
-  const newMessages = messages.filter(m => m.id > since);
+  const newMessages = messages.filter((m) => m.id > since);
 
   if (newMessages.length) return res.json(newMessages);
 
   let responded = false;
-  const cb = data => {
+  const cb = (data) => {
     if (!responded) {
       responded = true;
       res.json(data);
@@ -92,7 +98,7 @@ app.post("/api/messages", (req, res) => {
     timestamp: new Date().toISOString(),
     likes: 0,
     dislikes: 0,
-    type: "message"
+    type: "message",
   };
 
   messages.push(msg);
@@ -118,7 +124,7 @@ function handleUserAction(req, res, action) {
 
   res.json({
     onlineUsers: Array.from(onlineUsers),
-    count: onlineUsers.size
+    count: onlineUsers.size,
   });
 }
 
@@ -144,21 +150,29 @@ app.post("/api/react", (req, res) => {
 const server = http.createServer(app);
 const wsServer = new WebSocketServer({
   httpServer: server,
-  autoAcceptConnections: false
+  autoAcceptConnections: false,
 });
 
-wsServer.on("request", req => {
+wsServer.on("request", (req) => {
   const conn = req.accept(null, req.origin);
   wsClients.add(conn);
 
   // Send lightweight init (last 30 messages only)
-  conn.send(JSON.stringify({
-    type: "init",
-    messages: messages.slice(-30),
-    onlineUsers: Array.from(onlineUsers)
-  }));
+  try {
+    conn.send(
+      JSON.stringify({
+        type: "init",
+        messages: messages.slice(-30),
+        onlineUsers: Array.from(onlineUsers),
+      })
+    );
+  } catch (err) {
+    console.error("Failed to send init message:", err.message);
+    wsClients.delete(conn);
+    return;
+  }
 
-  conn.on("message", msg => {
+  conn.on("message", (msg) => {
     if (msg.type !== "utf8") return;
 
     try {
@@ -172,7 +186,7 @@ wsServer.on("request", req => {
           timestamp: new Date().toISOString(),
           likes: 0,
           dislikes: 0,
-          type: "message"
+          type: "message",
         };
 
         messages.push(newMsg);
@@ -200,7 +214,6 @@ wsServer.on("request", req => {
         onlineUsers.delete(data.user);
         createSystemMessage(`${data.user} has left the chat`);
       }
-
     } catch (err) {
       console.error("WebSocket parse error:", err);
     }
@@ -210,12 +223,13 @@ wsServer.on("request", req => {
     wsClients.delete(conn);
   });
 
-  conn.on("error", err => {
-    console.error("WebSocket error:", err);
+  conn.on("error", (err) => {
+    if (err.code !== "ECONNRESET") {
+      console.error("WebSocket error:", err.message || err);
+    }
     wsClients.delete(conn);
   });
 });
-
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
