@@ -1,13 +1,14 @@
-const API_BASE = "/api";
-const WS_URL =
-  (window.location.protocol === "https:" ? "wss" : "ws") +
-  "://" +
-  window.location.host +
-  "/ws";
+const BACKEND_URL =
+  "https://ecocoo0swswooowo0wk884og.hosting.codeyourfuture.io";
+const API_BASE = `${BACKEND_URL}/api`;
+const WS_URL = `${BACKEND_URL.replace("https://", "wss://").replace(
+  "http://",
+  "ws://"
+)}/ws`;
 
-// Local testing
-// const API_BASE = "http://localhost:3000";
-// const WS_URL = "ws://localhost:3000";
+// Local testing - uncomment to use local backend
+// const API_BASE = "http://localhost:3000/api";
+// const WS_URL = "ws://localhost:3000/ws";
 
 let currentUser = null;
 let ws = null;
