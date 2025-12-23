@@ -11,33 +11,38 @@ app.use(express.urlencoded({ extended: true }));
 
 const fs = require("fs");
 
-console.log("__dirname:", __dirname);
-console.log("process.cwd():", process.cwd());
+const possiblePaths = [
+  path.join(__dirname, "../frontend"),
+  path.join(__dirname, "frontend"),
+  path.join(__dirname, "../public"),
+  path.join(__dirname, "public"),
+  path.join(process.cwd(), "frontend"),
+  path.join(process.cwd(), "public"),
+  path.resolve(__dirname, "../frontend"),
+  path.resolve(process.cwd(), "frontend"),
+];
 
-let frontendPath = path.resolve(__dirname, "../frontend");
-console.log("Trying path 1:", frontendPath);
-if (!fs.existsSync(path.join(frontendPath, "index.html"))) {
-  frontendPath = path.resolve(process.cwd(), "frontend");
-  console.log("Trying path 2:", frontendPath);
-  if (!fs.existsSync(path.join(frontendPath, "index.html"))) {
-    frontendPath = path.resolve(process.cwd(), "../frontend");
-    console.log("Trying path 3:", frontendPath);
-    if (!fs.existsSync(path.join(frontendPath, "index.html"))) {
-      frontendPath = path.join(__dirname, "../frontend");
-      console.log("Trying path 4:", frontendPath);
-      if (!fs.existsSync(path.join(frontendPath, "index.html"))) {
-        frontendPath = path.join(process.cwd(), "frontend");
-        console.log("Trying path 5:", frontendPath);
-      }
-    }
+let frontendPath = null;
+for (const testPath of possiblePaths) {
+  const indexPath = path.join(testPath, "index.html");
+  if (fs.existsSync(indexPath)) {
+    frontendPath = testPath;
+    console.log("Found frontend at:", frontendPath);
+    break;
   }
 }
 
-console.log("Final frontend path:", frontendPath);
-console.log(
-  "Index.html exists:",
-  fs.existsSync(path.join(frontendPath, "index.html"))
-);
+if (!frontendPath) {
+  console.error("Frontend not found! Checked paths:");
+  possiblePaths.forEach((p) => {
+    console.error(`  - ${p} (exists: ${fs.existsSync(p)})`);
+  });
+  console.error("Contents of /app:", fs.readdirSync("/app"));
+  if (fs.existsSync("/")) {
+    console.error("Contents of /:", fs.readdirSync("/"));
+  }
+  frontendPath = path.join(__dirname, "../frontend");
+}
 
 app.get("/", (req, res) => {
   const indexPath = path.join(frontendPath, "index.html");
