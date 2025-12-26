@@ -1,5 +1,4 @@
-const BACKEND_URL =
-  "https://luke-chat-app-frontend.hosting.codeyourfuture.io";
+const BACKEND_URL = "https://luke-chat-app-backend.hosting.codeyourfuture.io";
 const API_BASE = `${BACKEND_URL}/api`;
 const WS_URL = `${BACKEND_URL.replace("https://", "wss://").replace(
   "http://",
